@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Чат с {{ other_user.username }} - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Чат с {{ other_user.full_name or other_user.username }}</h5>
+                <a href="{{ url_for('profile', user_id=other_user.id) }}" class="btn btn-sm btn-outline-primary">Профиль</a>
+            </div>
+            <div class="card-body" style="height: 500px; overflow-y: auto;" id="chat-messages">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="d-flex {% if message.sender_id == current_user.id %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+                    <div class="{% if message.sender_id == current_user.id %}bg-primary text-white{% else %}bg-light{% endif %} rounded p-3" style="max-width: 70%;">
+                        <p class="mb-1">{{ message.content }}</p>
+                        <small class="{% if message.sender_id == current_user.id %}text-light{% else %}text-muted{% endif %}">
+                            {{ message.created_at.strftime('%d.%m.%Y %H:%M') }}
+                        </small>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">История сообщений пуста. Напишите первое сообщение!</p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <form method="POST">
+                    <div class="input-group">
+                        <textarea class="form-control" id="content" name="content" rows="2" placeholder="Введите сообщение..." required></textarea>
+                        <button type="submit" class="btn btn-primary">Отправить</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <a href="{{ url_for('chat_list') }}" class="btn btn-outline-secondary">← Все чаты</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-scroll to bottom of chat
+var chatMessages = document.getElementById('chat-messages');
+chatMessages.scrollTop = chatMessages.scrollHeight;
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+```
+# Logs and temp files
+*.log
+
+# Database
+techhub/instance/*.db
+
+# Dependencies
+techhub/venv/
+techhub/.venv/
+techhub/__pycache__/
+techhub/.pytest_cache/
+techhub/.mypy_cache/
+
+# Environment
+techhub/.env
+techhub/.env.local
+techhub/*.env.*
+
+# Editors
+techhub/.vscode/
+techhub/.idea/
+
+# Compiled Python
+techhub/**/*.pyc
+techhub/**/__pycache__/
+```

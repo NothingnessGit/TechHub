@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование профиля - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Редактирование профиля</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label">ФИО</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" value="{{ current_user.full_name or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">О себе</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="4" placeholder="Расскажите о себе, вашем опыте и специализации">{{ current_user.bio or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Навыки (через запятую)</label>
+                        <input type="text" class="form-control" id="skills" name="skills" value="{{ current_user.skills or '' }}" placeholder="Python, машинное обучение, CAD, научные исследования">
+                        <small class="form-text text-muted">Перечислите ваши основные навыки через запятую</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ваша информация</label>
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <p class="mb-1"><strong>Имя пользователя:</strong> {{ current_user.username }}</p>
+                                <p class="mb-1"><strong>Email:</strong> {{ current_user.email }}</p>
+                                <p class="mb-0"><strong>Роль:</strong> {% if current_user.role == 'student' %}Студент{% else %}Преподаватель{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Сохранить изменения</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
