@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Чаты - ТехХаб{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Сообщения</h2>
+
+{% if conversations %}
+<div class="list-group">
+    {% for conv in conversations %}
+    <a href="{{ url_for('chat', user_id=conv.user.id) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ conv.user.full_name or conv.user.username }}</h5>
+            {% if conv.unread_count > 0 %}
+            <span class="badge bg-primary">{{ conv.unread_count }} новых</span>
+            {% endif %}
+        </div>
+        <p class="mb-1">{{ conv.last_message.content[:100] }}{% if conv.last_message.content|length > 100 %}...{% endif %}</p>
+        <small class="text-muted">
+            {{ conv.last_message.created_at.strftime('%d.%m.%Y %H:%M') }}
+            {% if conv.last_message.sender_id == current_user.id %}(Вы){% endif %}
+        </small>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    У вас пока нет сообщений. Начните общаться с заказчиками или исполнителями!
+</div>
+{% endif %}
+{% endblock %}

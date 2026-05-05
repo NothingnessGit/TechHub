@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Кошелёк - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Ваш баланс</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="display-4">{{ current_user.wallet_balance }}₽</h1>
+                <p class="text-muted">Доступно для вывода</p>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Пополнить счёт</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('deposit') }}">
+                    <div class="mb-3">
+                        <label for="deposit_amount" class="form-label">Сумма пополнения (₽)</label>
+                        <input type="number" class="form-control" id="deposit_amount" name="amount" min="100" step="100" required placeholder="1000">
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Пополнить</button>
+                </form>
+                <small class="text-muted">Пополнение происходит мгновенно</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Вывод средств</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('withdraw') }}">
+                    <div class="mb-3">
+                        <label for="withdraw_amount" class="form-label">Сумма вывода (₽)</label>
+                        <input type="number" class="form-control" id="withdraw_amount" name="amount" min="100" step="100" max="{{ current_user.wallet_balance }}" required placeholder="500">
+                        <small class="form-text text-muted">Максимум: {{ current_user.wallet_balance }}₽</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="withdraw_method" class="form-label">Способ вывода</label>
+                        <select class="form-select" id="withdraw_method" name="method">
+                            <option value="card">Банковская карта</option>
+                            <option value="sbp">СБП</option>
+                            <option value="yoomoney">ЮMoney</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="withdraw_details" class="form-label">Реквизиты</label>
+                        <input type="text" class="form-control" id="withdraw_details" name="details" required placeholder="Номер карты или телефона">
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Вывести средства</button>
+                </form>
+                <small class="text-muted">Вывод обрабатывается в течение 1-3 рабочих дней</small>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            <h6>Как это работает?</h6>
+            <ul class="mb-0 small">
+                <li>Заказчик резервирует сумму на счёте при принятии отклика</li>
+                <li>Исполнитель получает деньги после завершения работы</li>
+                <li>Комиссия сервиса составляет 10%</li>
+                <li>Все платежи защищены гарантом</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

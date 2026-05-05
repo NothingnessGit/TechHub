@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Все заказы - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>Доска заказов</h2>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <form method="GET" class="d-flex gap-2 flex-wrap">
+            <select name="category" class="form-select" style="width: auto;">
+                <option value="">Все категории</option>
+                {% for category in categories %}
+                <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Фильтровать</button>
+            <a href="{{ url_for('orders') }}" class="btn btn-outline-secondary">Сбросить</a>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        {% if orders %}
+        <div class="list-group">
+            {% for order in orders %}
+            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ order.title }}</h5>
+                    <span class="badge bg-primary">{{ order.budget }}₽</span>
+                </div>
+                <p class="mb-1">{{ order.description[:200] }}{% if order.description|length > 200 %}...{% endif %}</p>
+                <small class="text-muted">
+                    <span class="badge bg-secondary">{{ order.category }}</span>
+                    <span class="badge bg-{% if order.status == 'open' %}success{% elif order.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                        {% if order.status == 'open' %}Открыт{% elif order.status == 'in_progress' %}В работе{% else %}{{ order.status }}{% endif %}
+                    </span>
+                    Заказчик: <a href="{{ url_for('profile', user_id=order.customer.id) }}">{{ order.customer.username }}</a> | 
+                    {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% if order.deadline %} | Дедлайн: {{ order.deadline.strftime('%d.%m.%Y') }}{% endif %}
+                </small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Нет заказов по выбранным критериям
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Создать заказ - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Создание нового заказа</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Название</label>
+                        <input type="text" class="form-control" id="title" name="title" required placeholder="Например: Разработка модели машинного обучения">
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Категория</label>
+                        <select class="form-select" id="category" name="category" required>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Описание</label>
+                        <textarea class="form-control" id="description" name="description" rows="5" required placeholder="Подробно опишите задачу, требования и ожидаемый результат"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="budget" class="form-label">Бюджет (₽)</label>
+                        <input type="number" class="form-control" id="budget" name="budget" required min="100" step="100" placeholder="1000">
+                    </div>
+                    <div class="mb-3">
+                        <label for="deadline" class="form-label">Дедлайн (необязательно)</label>
+                        <input type="date" class="form-control" id="deadline" name="deadline">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Создать заказ</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

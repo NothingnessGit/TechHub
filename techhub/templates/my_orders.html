@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Мои задания - ТехХаб{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Мои задания</h2>
+
+<ul class="nav nav-tabs mb-4" id="myOrdersTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="posted-tab" data-bs-toggle="tab" data-bs-target="#posted" type="button" role="tab">
+            Мои заказы ({{ orders_posted|length }})
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="bidded-tab" data-bs-toggle="tab" data-bs-target="#bidded" type="button" role="tab">
+            Мои отклики ({{ orders_bidded|length }})
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="myOrdersTabContent">
+    <!-- Вкладка: размещенные заказы -->
+    <div class="tab-pane fade show active" id="posted" role="tabpanel">
+        {% if orders_posted %}
+        <div class="list-group">
+            {% for order in orders_posted %}
+            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ order.title }}</h5>
+                    <span class="badge bg-primary">{{ order.budget }}₽</span>
+                </div>
+                <p class="mb-1">{{ order.description[:200] }}{% if order.description|length > 200 %}...{% endif %}</p>
+                <small class="text-muted">
+                    <span class="badge bg-secondary">{{ order.category }}</span>
+                    <span class="badge bg-{% if order.status == 'open' %}success{% elif order.status == 'in_progress' %}warning{% elif order.status == 'completed' %}info{% else %}secondary{% endif %}">
+                        {% if order.status == 'open' %}Открыт{% elif order.status == 'in_progress' %}В работе{% elif order.status == 'completed' %}Завершен{% else %}{{ order.status }}{% endif %}
+                    </span>
+                    Откликов: {{ order.bids|length }} | 
+                    {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    {% if order.deadline %} | Дедлайн: {{ order.deadline.strftime('%d.%m.%Y') }}{% endif %}
+                </small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            У вас пока нет размещенных заказов. <a href="{{ url_for('create_order') }}">Создать первый заказ</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Вкладка: заказы с откликами -->
+    <div class="tab-pane fade" id="bidded" role="tabpanel">
+        {% if orders_bidded %}
+        <div class="list-group">
+            {% for order in orders_bidded %}
+            {% set bid = bids.get(order.id) %}
+            <a href="{{ url_for('order_detail', order_id=order.id) }}" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ order.title }}</h5>
+                    <span class="badge bg-primary">{{ order.budget }}₽</span>
+                </div>
+                <p class="mb-1">{{ order.description[:200] }}{% if order.description|length > 200 %}...{% endif %}</p>
+                <small class="text-muted">
+                    <span class="badge bg-secondary">{{ order.category }}</span>
+                    <span class="badge bg-{% if order.status == 'open' %}success{% elif order.status == 'in_progress' %}warning{% elif order.status == 'completed' %}info{% else %}secondary{% endif %}">
+                        {% if order.status == 'open' %}Открыт{% elif order.status == 'in_progress' %}В работе{% elif order.status == 'completed' %}Завершен{% else %}{{ order.status }}{% endif %}
+                    </span>
+                    Ваш отклик: 
+                    {% if bid.status == 'pending' %}
+                    <span class="badge bg-warning">На рассмотрении</span>
+                    {% elif bid.status == 'accepted' %}
+                    <span class="badge bg-success">Принят</span>
+                    {% else %}
+                    <span class="badge bg-danger">Отклонён</span>
+                    {% endif %}
+                    | Сумма: {{ bid.amount }}₽ |
+                    Заказчик: <a href="{{ url_for('profile', user_id=order.customer.id) }}">{{ order.customer.username }}</a> |
+                    {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                </small>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            Вы пока не откликались на заказы. <a href="{{ url_for('orders') }}">Посмотреть доступные заказы</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

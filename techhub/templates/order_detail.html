@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}{{ order.title }} - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ order.title }}</h4>
+                <span class="badge bg-{% if order.status == 'open' %}success{% elif order.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                    {% if order.status == 'open' %}Открыт{% elif order.status == 'in_progress' %}В работе{% else %}{{ order.status }}{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    <strong>Категория:</strong> {{ order.category }} | 
+                    <strong>Бюджет:</strong> {{ order.budget }}₽ |
+                    <strong>Заказчик:</strong> <a href="{{ url_for('profile', user_id=order.customer.id) }}">{{ order.customer.username }}</a>
+                </p>
+                <p><strong>Описание:</strong></p>
+                <p>{{ order.description }}</p>
+                {% if order.deadline %}
+                <p><strong>Дедлайн:</strong> {{ order.deadline.strftime('%d.%m.%Y') }}</p>
+                {% endif %}
+                <p class="text-muted small">Создан: {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}</p>
+                
+                {% if current_user.is_authenticated and current_user.id != order.customer_id and order.status == 'open' %}
+                <hr>
+                <h5>Откликнуться на заказ</h5>
+                <form method="POST" action="{{ url_for('place_bid', order_id=order.id) }}">
+                    <div class="mb-3">
+                        <label for="proposal" class="form-label">Ваше предложение</label>
+                        <textarea class="form-control" id="proposal" name="proposal" rows="3" required placeholder="Опишите как вы планируете выполнить задачу"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Сумма (₽)</label>
+                        <input type="number" class="form-control" id="amount" name="amount" required min="100" step="100" value="{{ order.budget }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Отправить отклик</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if bids %}
+        <div class="card">
+            <div class="card-header">
+                <h5>Отклики ({{ bids|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% for bid in bids %}
+                <div class="border rounded p-3 mb-3 {% if bid.status == 'accepted' %}bg-success bg-opacity-10{% endif %}">
+                    <div class="d-flex justify-content-between">
+                        <h6>{{ bid.bidder.full_name or bid.bidder.username }}</h6>
+                        <span class="badge bg-primary">{{ bid.amount }}₽</span>
+                    </div>
+                    <p class="text-muted small">
+                        Рейтинг: {{ bid.bidder.rating }}/5 ({{ bid.bidder.reviews_count }} отзывов) |
+                        Статус: 
+                        {% if bid.status == 'pending' %}
+                        <span class="badge bg-warning">На рассмотрении</span>
+                        {% elif bid.status == 'accepted' %}
+                        <span class="badge bg-success">Принят</span>
+                        {% else %}
+                        <span class="badge bg-danger">Отклонён</span>
+                        {% endif %}
+                    </p>
+                    <p>{{ bid.proposal }}</p>
+                    <small class="text-muted">{{ bid.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                    
+                    {% if current_user.is_authenticated and current_user.id == order.customer_id and bid.status == 'pending' %}
+                    <div class="mt-2">
+                        <form method="POST" action="{{ url_for('accept_bid', bid_id=bid.id) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-success">Принять ({{ bid.amount }}₽)</button>
+                        </form>
+                        <a href="{{ url_for('chat', user_id=bid.bidder.id) }}" class="btn btn-sm btn-outline-primary">Написать</a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_authenticated and current_user.id == bid.bidder_id and bid.status == 'accepted' %}
+                    <div class="mt-2">
+                        <a href="{{ url_for('chat', user_id=order.customer_id) }}" class="btn btn-sm btn-outline-primary">Написать заказчику</a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>О заказчике</h5>
+            </div>
+            <div class="card-body text-center">
+                <h4>{{ order.customer.username }}</h4>
+                <p class="text-muted">{{ order.customer.role }}</p>
+                <div class="mb-2">
+                    {% for i in range(5) %}
+                    <span class="{% if i < order.customer.rating|int %}text-warning{% else %}text-muted{% endif %}">★</span>
+                    {% endfor %}
+                    <small>({{ order.customer.rating }}/5)</small>
+                </div>
+                <p class="small text-muted">{{ order.customer.reviews_count }} отзывов</p>
+                {% if current_user.is_authenticated and current_user.id != order.customer.id %}
+                <a href="{{ url_for('chat', user_id=order.customer.id) }}" class="btn btn-outline-primary btn-sm">Написать сообщение</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

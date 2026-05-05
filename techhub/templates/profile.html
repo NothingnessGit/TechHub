@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль {{ user.username }} - ТехХаб{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2>{{ user.full_name or user.username }}</h2>
+                <p class="text-muted">{{ user.role }}</p>
+                <div class="mb-3">
+                    {% for i in range(5) %}
+                    <span class="{% if i < user.rating|int %}text-warning{% else %}text-muted{% endif %}" style="font-size: 1.5rem;">★</span>
+                    {% endfor %}
+                </div>
+                <h4>{{ user.rating }}/5</h4>
+                <p class="text-muted">{{ user.reviews_count }} отзывов</p>
+                <p class="small text-muted">На сайте с {{ user.created_at.strftime('%d.%m.%Y') }}</p>
+                
+                {% if current_user.is_authenticated and current_user.id != user.id %}
+                <a href="{{ url_for('chat', user_id=user.id) }}" class="btn btn-primary w-100">Написать сообщение</a>
+                {% endif %}
+                
+                {% if current_user.is_authenticated and current_user.id == user.id %}
+                <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary w-100 mt-2">Редактировать профиль</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Навыки</h5>
+            </div>
+            <div class="card-body">
+                {% if user.skills %}
+                <div class="d-flex flex-wrap gap-2">
+                    {% for skill in user.skills.split(',') %}
+                    <span class="badge bg-secondary">{{ skill.strip() }}</span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">Навыки не указаны</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>О себе</h5>
+            </div>
+            <div class="card-body">
+                {% if user.bio %}
+                <p>{{ user.bio }}</p>
+                {% else %}
+                <p class="text-muted">Информация о себе не указана</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5>Отзывы ({{ reviews|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if reviews %}
+                {% for review in reviews %}
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ review.reviewer.username }}</strong>
+                        <div>
+                            {% for i in range(5) %}
+                            <span class="{% if i < review.rating %}text-warning{% else %}text-muted{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if review.comment %}
+                    <p class="mt-2 mb-0">{{ review.comment }}</p>
+                    {% endif %}
+                    <small class="text-muted">{{ review.created_at.strftime('%d.%m.%Y') }}</small>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted">Пока нет отзывов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
