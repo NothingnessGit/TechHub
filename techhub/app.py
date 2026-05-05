@@ -193,8 +193,20 @@ def create_order():
         title = request.form.get('title')
         description = request.form.get('description')
         category = request.form.get('category')
-        budget = float(request.form.get('budget'))
+        budget_str = request.form.get('budget')
         deadline_str = request.form.get('deadline')
+        
+        # Валидация бюджета
+        try:
+            budget = float(budget_str)
+            if budget < 100:
+                flash('Минимальный бюджет должен быть не менее 100₽', 'danger')
+                categories = ['Разработка', 'Дизайн', 'Инженерия', 'Научные исследования', 'Анализ данных', 'Другое']
+                return render_template('create_order.html', categories=categories)
+        except (ValueError, TypeError):
+            flash('Некорректная сумма бюджета', 'danger')
+            categories = ['Разработка', 'Дизайн', 'Инженерия', 'Научные исследования', 'Анализ данных', 'Другое']
+            return render_template('create_order.html', categories=categories)
         
         deadline = None
         if deadline_str:
@@ -262,11 +274,19 @@ def accept_bid(bid_id):
         flash('У вас нет прав для этого действия', 'danger')
         return redirect(url_for('order_detail', order_id=order.id))
     
+    # Проверка баланса заказчика
+    if current_user.wallet_balance < bid.amount:
+        flash('Недостаточно средств на балансе для принятия отклика. Пожалуйста, пополните кошелек.', 'danger')
+        return redirect(url_for('order_detail', order_id=order.id))
+    
+    # Блокировка суммы на балансе (резервирование)
     bid.status = 'accepted'
     order.status = 'in_progress'
+    # Резервируем сумму (списываем с баланса заказчика)
+    current_user.wallet_balance -= bid.amount
     db.session.commit()
     
-    flash('Отклик принят!', 'success')
+    flash('Отклик принят! Средства зарезервированы.', 'success')
     return redirect(url_for('order_detail', order_id=order.id))
 
 @app.route('/chat')
@@ -299,6 +319,39 @@ def chat_list():
 def chat(user_id):
     other_user = User.query.get_or_404(user_id)
     
+    # Проверка: чат возможен только если есть связанный заказ (отклик или заказчик)
+    has_connection = False
+    
+    # Проверяем, есть ли заказы от current_user, где other_user сделал отклик
+    orders_by_current = Order.query.filter_by(customer_id=current_user.id).all()
+    for order in orders_by_current:
+        bid = Bid.query.filter_by(order_id=order.id, bidder_id=user_id).first()
+        if bid:
+            has_connection = True
+            break
+    
+    # Проверяем, есть ли заказы от other_user, где current_user сделал отклик
+    if not has_connection:
+        orders_by_other = Order.query.filter_by(customer_id=user_id).all()
+        for order in orders_by_other:
+            bid = Bid.query.filter_by(order_id=order.id, bidder_id=current_user.id).first()
+            if bid:
+                has_connection = True
+                break
+    
+    # Также разрешаем чат если уже есть история сообщений
+    if not has_connection:
+        existing_message = Message.query.filter(
+            ((Message.sender_id == current_user.id) & (Message.receiver_id == user_id)) |
+            ((Message.sender_id == user_id) & (Message.receiver_id == current_user.id))
+        ).first()
+        if existing_message:
+            has_connection = True
+    
+    if not has_connection and current_user.id != user_id:
+        flash('Вы можете писать только пользователям, с которыми у вас есть общий заказ', 'warning')
+        return redirect(url_for('chat_list'))
+    
     if request.method == 'POST':
         content = request.form.get('content')
         if content:
@@ -323,6 +376,23 @@ def chat(user_id):
     db.session.commit()
     
     return render_template('chat.html', other_user=other_user, messages=messages)
+
+@app.route('/my_orders')
+@login_required
+def my_orders():
+    """Страница с заказами пользователя: размещенные и отклики"""
+    # Заказы, которые создал пользователь
+    orders_posted = Order.query.filter_by(customer_id=current_user.id).order_by(Order.created_at.desc()).all()
+    
+    # Отклики пользователя на заказы
+    bids_made = Bid.query.filter_by(bidder_id=current_user.id).order_by(Bid.created_at.desc()).all()
+    orders_bidded = [bid.order for bid in bids_made]
+    bids_dict = {bid.order_id: bid for bid in bids_made}
+    
+    return render_template('my_orders.html', 
+                         orders_posted=orders_posted, 
+                         orders_bidded=orders_bidded,
+                         bids=bids_dict)
 
 @app.route('/wallet')
 @login_required

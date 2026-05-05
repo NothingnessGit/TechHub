@@ -72,9 +72,15 @@
                     {% if current_user.is_authenticated and current_user.id == order.customer_id and bid.status == 'pending' %}
                     <div class="mt-2">
                         <form method="POST" action="{{ url_for('accept_bid', bid_id=bid.id) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-sm btn-success">Принять</button>
+                            <button type="submit" class="btn btn-sm btn-success">Принять ({{ bid.amount }}₽)</button>
                         </form>
                         <a href="{{ url_for('chat', user_id=bid.bidder.id) }}" class="btn btn-sm btn-outline-primary">Написать</a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if current_user.is_authenticated and current_user.id == bid.bidder_id and bid.status == 'accepted' %}
+                    <div class="mt-2">
+                        <a href="{{ url_for('chat', user_id=order.customer_id) }}" class="btn btn-sm btn-outline-primary">Написать заказчику</a>
                     </div>
                     {% endif %}
                 </div>
